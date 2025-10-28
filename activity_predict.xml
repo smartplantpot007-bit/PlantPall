@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="#E8FFF0"
+    android:padding="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🌿 Plant Health Prediction"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="40dp"
+        android:gravity="center" />
+
+    <!-- Predict button -->
+
+    <!-- Result text -->
+
+    <Button
+        android:id="@+id/btnPredict"
+        android:layout_width="266dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/bg_fancy_button"
+        android:elevation="6dp"
+        android:text="Predict Now 🔍"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvPredictionResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:textColor="#1B5E20"
+        android:gravity="center"
+        android:layout_marginTop="10dp" />
+</LinearLayout>

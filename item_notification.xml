@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:padding="8dp"
+    android:backgroundTint="#FFFFFF"
+    android:radius="12dp"
+    android:elevation="4dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvPlantName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Smart Plant Pot"
+            android:textColor="#1B5E20"
+            android:textStyle="bold"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/tvNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rosey needs watering! Soil moisture is low 🌱"
+            android:textColor="#2E7D32"
+            android:paddingTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Oct 15, 3:10 PM"
+            android:textSize="12sp"
+            android:textColor="#757575"
+            android:paddingTop="2dp"/>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
