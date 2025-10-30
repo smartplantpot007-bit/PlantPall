@@ -4,6 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.content.Intent
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -14,8 +16,8 @@ import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
-
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.database.*
 
 class HomepgActivity : AppCompatActivity() {
 
@@ -26,6 +28,8 @@ class HomepgActivity : AppCompatActivity() {
     private lateinit var speedometer3: SpeedometerView
     private lateinit var speedometer4: SpeedometerView
 
+    private lateinit var database: DatabaseReference
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +37,15 @@ class HomepgActivity : AppCompatActivity() {
 
         setupGauges()
 
+        // Initialize Firebase Database reference
+        database = FirebaseDatabase.getInstance().getReference("sensorData")
+
+
+
+        // Fetch Firebase sensor data in real time
+        fetchFirebaseData()
+
+        // Keep your weather API logic untouched
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -40,10 +53,10 @@ class HomepgActivity : AppCompatActivity() {
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
-
-        val ivBack = findViewById<ImageView>(R.id.ivBack)
-        ivBack.setOnClickListener {
-            finish()
+        val ivProfile = findViewById<ImageView>(R.id.ivnotif)
+        ivProfile.setOnClickListener {
+            val intent = Intent(this, NotificationsActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -52,12 +65,43 @@ class HomepgActivity : AppCompatActivity() {
         speedometer2 = findViewById(R.id.gauge2)
         speedometer3 = findViewById(R.id.gauge3)
         speedometer4 = findViewById(R.id.gauge4)
+    }
 
-        // Example usage - you can update these based on your app's data
-        speedometer1.setSpeed(70f)
-        speedometer2.setSpeed(45f)
-        speedometer3.setSpeed(90f)
-        speedometer4.setSpeed(30f)
+    // 🔹 Real-time Firebase data fetching
+    // 🔹 Real-time Firebase data fetching (fixed for your structure)
+    private fun fetchFirebaseData() {
+        Log.d("FirebaseCheck", "Connecting to Firebase...")
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                Log.d("FirebaseCheck", "Snapshot exists: ${snapshot.exists()}")
+                Log.d("FirebaseCheck", "Raw data: ${snapshot.value}")
+
+                if (snapshot.exists()) {
+                    val data = snapshot.getValue(SensorData::class.java)
+                    if (data != null) {
+                        Log.d("FirebaseCheck", "Parsed data: $data")
+
+                        speedometer1.setSpeed(data.soilMoisture1)
+                        speedometer2.setSpeed(data.soilMoisture2)
+                        speedometer3.setSpeed((data.soilTemperature / 50f) * 100f)
+                        speedometer4.setSpeed(data.uv)
+
+                        findViewById<TextView>(R.id.tvMoist1).text = "Soil M1: ${data.soilMoisture1}"
+                        findViewById<TextView>(R.id.tvMoist2).text = "Soil M2: ${data.soilMoisture2}"
+                        findViewById<TextView>(R.id.tvSoilTemp).text = "Soil Temp: ${data.soilTemperature}°C"
+                        findViewById<TextView>(R.id.tvUV).text = "UV Index: ${data.uv}"
+                    } else {
+                        Log.d("FirebaseCheck", "Data parsed as null")
+                    }
+                } else {
+                    Log.d("FirebaseCheck", "Snapshot is empty")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FirebaseCheck", "Firebase error: ${error.message}")
+            }
+        })
     }
 
     private val requestPermissionLauncher =
@@ -117,17 +161,11 @@ class HomepgActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.wind).text = "$windSpeed m/s"
                     findViewById<TextView>(R.id.visibility).text = "$visibility km"
 
-                    // Optionally map real weather values to gauges
-                    speedometer1.setSpeed(temperature.toFloat().coerceIn(0f, 100f))
-                    speedometer2.setSpeed(humidity.toFloat().coerceIn(0f, 100f))
-                    speedometer3.setSpeed((windSpeed * 10).toFloat().coerceIn(0f, 100f))
-                    speedometer4.setSpeed((visibility * 10).toFloat().coerceIn(0f, 100f))
-
                 } catch (e: Exception) {
                     Toast.makeText(this, "Error parsing weather data", Toast.LENGTH_SHORT).show()
                 }
             },
-            { error ->
+            { _ ->
                 Toast.makeText(this, "Error fetching weather data", Toast.LENGTH_SHORT).show()
             }
         )
