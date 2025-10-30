@@ -6,6 +6,7 @@
     android:background="#F5FFF7"
     android:padding="16dp">
 
+    <!-- 🌿 Header -->
     <TextView
         android:id="@+id/tvHeader"
         android:layout_width="match_parent"
@@ -15,8 +16,10 @@
         android:textStyle="bold"
         android:textColor="@color/black"
         android:gravity="center"
-        android:paddingBottom="10dp" />
+        android:paddingBottom="10dp"
+        android:layout_marginTop="24dp" /> <!-- Title moved slightly down -->
 
+    <!-- 🪴 Notifications List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvNotifications"
         android:layout_width="match_parent"
@@ -24,18 +27,31 @@
         android:layout_weight="1"
         android:padding="4dp" />
 
-    <TextView
-        android:id="@+id/tvCheckPrediction"
+    <!-- 🔮 Predict Now Button -->
+    <Button
+        android:id="@+id/btnPredict"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🔮 Check Plant Prediction"
+        android:text="Predict Now 🔍"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/white"
         android:background="@drawable/bg_fancy_button"
-        android:gravity="center"
+        android:elevation="6dp"
         android:padding="14dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp" /> <!-- Lifted slightly up -->
 
+    <!-- 🪴 Prediction Result -->
+    <TextView
+        android:id="@+id/tvPredictionResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:textColor="#1B5E20"
+        android:gravity="center"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="20dp" /> <!-- Moved closer to button -->
 </LinearLayout>
