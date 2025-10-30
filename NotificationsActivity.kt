@@ -1,16 +1,24 @@
 package com.example.plantpall
 
-import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONObject
 
 class NotificationsActivity : AppCompatActivity() {
 
     private lateinit var rvNotifications: RecyclerView
+    private lateinit var btnPredict: Button
+    private lateinit var tvPredictionResult: TextView
+
+    private val apiUrl = "https://plant-predict-4u3k.onrender.com/predict"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,19 +28,40 @@ class NotificationsActivity : AppCompatActivity() {
         rvNotifications.layoutManager = LinearLayoutManager(this)
 
         val notifications = listOf(
-            NotificationModel("Rosey", "Rosey needs watering! Soil moisture is low 🌿", "Oct 15, 3:10 PM"),
-            NotificationModel("Tulip", "Tulip’s soil pH is too high. Adjust nutrients 🌸", "Oct 15, 2:45 PM"),
-            NotificationModel("Fern", "Cold stress alert! Fern’s temperature dropped ❄", "Oct 15, 1:30 PM"),
-            NotificationModel("Lily", "Lily’s moisture level is optimal 🌼", "Oct 15, 12:00 PM")
+            NotificationModel("Rosey", "Rosey needs watering! Soil moisture is low 🌿", "Oct 15, 3:10 PM")
         )
 
         rvNotifications.adapter = NotificationAdapter(notifications)
 
-        val tvCheckPrediction = findViewById<TextView>(R.id.tvCheckPrediction)
-        tvCheckPrediction.setOnClickListener {
-            // Move to Prediction Activity
-            startActivity(Intent(this, PredictActivity::class.java))
-            Toast.makeText(this, "🔮 Opening plant prediction screen...", Toast.LENGTH_SHORT).show()
+        btnPredict = findViewById(R.id.btnPredict)
+        tvPredictionResult = findViewById(R.id.tvPredictionResult)
+
+        btnPredict.setOnClickListener {
+            val inputData = JSONObject().apply {
+                put("Soil_Moisture", 40)
+                put("Ambient_Temperature", 27)
+                put("Soil_Temperature", 25)
+                put("Humidity", 70)
+            }
+            sendPredictionRequest(inputData)
         }
+    }
+
+    private fun sendPredictionRequest(data: JSONObject) {
+        val queue = Volley.newRequestQueue(this)
+
+        val request = JsonObjectRequest(
+            Request.Method.POST, apiUrl, data,
+            { response ->
+                val prediction = response.optString("prediction", "No response")
+                tvPredictionResult.text = "🪴 Prediction: $prediction"
+            },
+            { error ->
+                tvPredictionResult.text = "❌ Error: ${error.message}"
+                Toast.makeText(this, "Failed to connect to server", Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        queue.add(request)
     }
 }
