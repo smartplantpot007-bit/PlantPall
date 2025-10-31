@@ -42,7 +42,8 @@ class SpeedometerView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // Dark background
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.SRC)
+
 
         val centerX = width / 2f
         val centerY = height / 2f
@@ -114,9 +115,13 @@ class SpeedometerView @JvmOverloads constructor(
     }
 
     private fun mapValueToAngle(value: Float): Float {
-        // Map 0–100 to 180–360 degrees
-        return 180f + (value / 100f) * 180f
+        val minRange = 0f
+        val maxRange = 100f   // set actual expected max for that sensor
+        val clamped = value.coerceIn(minRange, maxRange)
+        return 180f + ((clamped - minRange) / (maxRange - minRange)) * 180f
     }
+
+
 
     fun setSpeed(value: Float) {
         currentValue = value.coerceIn(0f, 100f)
