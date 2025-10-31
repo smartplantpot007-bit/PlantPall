@@ -38,7 +38,8 @@ class HomepgActivity : AppCompatActivity() {
         setupGauges()
 
         // Initialize Firebase Database reference
-        database = FirebaseDatabase.getInstance().getReference("sensorData")
+        database = FirebaseDatabase.getInstance("https://plantpal-f-default-rtdb.asia-southeast1.firebasedatabase.app/")
+            .getReference("sensorData")
 
 
 
@@ -172,3 +173,4 @@ class HomepgActivity : AppCompatActivity() {
         queue.add(request)
     }
 }
+
