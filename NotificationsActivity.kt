@@ -20,28 +20,45 @@ class NotificationsActivity : AppCompatActivity() {
 
     private val apiUrl = "https://plant-predict-4u3k.onrender.com/predict"
 
+    private var soilMoisture = 0f
+    private var ambientTemp = 0f
+    private var soilTemp = 0f
+    private var humidity = 0f
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notifications)
 
         rvNotifications = findViewById(R.id.rvNotifications)
-        rvNotifications.layoutManager = LinearLayoutManager(this)
-
-        val notifications = listOf(
-            NotificationModel("Rosey", "Rosey needs watering! Soil moisture is low 🌿", "Oct 15, 3:10 PM")
-        )
-
-        rvNotifications.adapter = NotificationAdapter(notifications)
-
         btnPredict = findViewById(R.id.btnPredict)
         tvPredictionResult = findViewById(R.id.tvPredictionResult)
 
+        // Retrieve values from Intent
+        soilMoisture = intent.getFloatExtra("Soil_Moisture", 0f)
+        ambientTemp = intent.getFloatExtra("Ambient_Temperature", 0f)
+        soilTemp = intent.getFloatExtra("Soil_Temperature", 0f)
+        humidity = intent.getFloatExtra("Humidity", 0f)
+
+
+        // RecyclerView setup
+        rvNotifications.layoutManager = LinearLayoutManager(this)
+        val notifications = listOf(
+            NotificationModel(
+                "Live Plant 🌱",
+                "Live data received from Firebase!",
+                "Now: ${System.currentTimeMillis()}"
+            )
+        )
+        rvNotifications.adapter = NotificationAdapter(notifications)
+
+        // On button click → Send data for prediction
         btnPredict.setOnClickListener {
             val inputData = JSONObject().apply {
-                put("Soil_Moisture", 40)
-                put("Ambient_Temperature", 27)
-                put("Soil_Temperature", 25)
-                put("Humidity", 70)
+                put("Soil_Moisture", soilMoisture)
+                put("Ambient_Temperature", ambientTemp)
+                put("Soil_Temperature", soilTemp)
+                put("Humidity", humidity)
             }
             sendPredictionRequest(inputData)
         }
@@ -53,11 +70,11 @@ class NotificationsActivity : AppCompatActivity() {
         val request = JsonObjectRequest(
             Request.Method.POST, apiUrl, data,
             { response ->
-                val prediction = response.optString("prediction", "No response")
+                val prediction = response.optString("prediction", "No response from server")
                 tvPredictionResult.text = "🪴 Prediction: $prediction"
             },
             { error ->
-                tvPredictionResult.text = "❌ Error: ${error.message}"
+                tvPredictionResult.text = "❌ Error: ${error.message ?: "Server error"}"
                 Toast.makeText(this, "Failed to connect to server", Toast.LENGTH_SHORT).show()
             }
         )
