@@ -39,11 +39,11 @@ class SpeedometerView @JvmOverloads constructor(
     }
 
     private var currentValue = 30f
+    private var maxRange = 100f  // can be customized later
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.SRC)
-
 
         val centerX = width / 2f
         val centerY = height / 2f
@@ -109,19 +109,22 @@ class SpeedometerView @JvmOverloads constructor(
         }
 
         canvas.drawPath(needlePath, needlePaint)
-
-        // Draw center circle
         canvas.drawCircle(centerX, centerY, 16f, centerCirclePaint)
     }
 
     private fun mapValueToAngle(value: Float): Float {
         val minRange = 0f
-        val maxRange = 100f   // set actual expected max for that sensor
         val clamped = value.coerceIn(minRange, maxRange)
         return 180f + ((clamped - minRange) / (maxRange - minRange)) * 180f
     }
+
     fun setSpeed(value: Float) {
-        currentValue = value.coerceIn(0f, 100f)
+        currentValue = value.coerceIn(0f, maxRange)
+        invalidate()
+    }
+
+    fun setMaxRange(maxValue: Float) {
+        maxRange = maxValue
         invalidate()
     }
 }
