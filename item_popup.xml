@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="8dp"
+    android:background="@drawable/bg_card"
+    android:elevation="4dp">
+
+    <TextView
+        android:id="@+id/tvPopupMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Plant is okay 🙂"
+        android:textSize="16sp"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/tvPopupTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nov 2, 4:05 PM"
+        android:textSize="13sp"
+        android:textColor="#666"
+        android:layout_marginTop="4dp" />
+</LinearLayout>
