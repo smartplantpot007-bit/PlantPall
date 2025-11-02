@@ -27,6 +27,12 @@
         android:layout_weight="1"
         android:padding="4dp" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPopups"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
     <!-- 🔮 Predict Now Button -->
     <Button
         android:id="@+id/btnPredict"
@@ -54,4 +60,20 @@
         android:gravity="center"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="20dp" />
+
+    <!-- 🌱 Swipeable Popups List -->
+
+
+    <!-- 🧹 Clear All Button -->
+    <Button
+        android:id="@+id/btnClearPopups"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🧹 Clear All"
+        android:textSize="14sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        android:backgroundTint="@color/teal_700"
+        android:textColor="@color/white" />
 </LinearLayout>
