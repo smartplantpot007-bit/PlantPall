@@ -17,7 +17,7 @@
         android:textColor="@color/black"
         android:gravity="center"
         android:paddingBottom="10dp"
-        android:layout_marginTop="24dp" /> <!-- Title moved slightly down -->
+        android:layout_marginTop="24dp" />
 
     <!-- 🪴 Notifications List -->
     <androidx.recyclerview.widget.RecyclerView
@@ -40,7 +40,7 @@
         android:elevation="6dp"
         android:padding="14dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="8dp" /> <!-- Lifted slightly up -->
+        android:layout_marginBottom="8dp" />
 
     <!-- 🪴 Prediction Result -->
     <TextView
@@ -53,5 +53,5 @@
         android:textColor="#1B5E20"
         android:gravity="center"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="20dp" /> <!-- Moved closer to button -->
+        android:layout_marginBottom="20dp" />
 </LinearLayout>
