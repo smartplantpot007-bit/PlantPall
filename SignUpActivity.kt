@@ -43,6 +43,7 @@ class SignUpActivity : AppCompatActivity() {
 
         ivBack.setOnClickListener { finish() }
 
+        // 👁 Toggle password visibility
         etPassword.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
                 etPassword.compoundDrawables[2]?.let { drawable ->
@@ -67,6 +68,7 @@ class SignUpActivity : AppCompatActivity() {
             false
         }
 
+        // 🔹 Google Sign-In setup
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
