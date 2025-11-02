@@ -120,9 +120,6 @@ class SpeedometerView @JvmOverloads constructor(
         val clamped = value.coerceIn(minRange, maxRange)
         return 180f + ((clamped - minRange) / (maxRange - minRange)) * 180f
     }
-
-
-
     fun setSpeed(value: Float) {
         currentValue = value.coerceIn(0f, 100f)
         invalidate()
