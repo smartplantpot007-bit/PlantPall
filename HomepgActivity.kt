@@ -26,14 +26,13 @@ class HomepgActivity : AppCompatActivity() {
     private lateinit var speedometer1: SpeedometerView
     private lateinit var speedometer2: SpeedometerView
     private lateinit var speedometer3: SpeedometerView
-    private lateinit var speedometer4: SpeedometerView
 
     private lateinit var database: DatabaseReference
 
-    // ✅ Store the latest data to send to NotificationsActivity
     private var latestSensorData: SensorData? = null
     private var latestTemp: Float = 0f
     private var latestHumidity: Float = 0f
+    private var latestUV: Float = 0f
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,15 +41,12 @@ class HomepgActivity : AppCompatActivity() {
 
         setupGauges()
 
-        // Initialize Firebase Database reference
         database = FirebaseDatabase.getInstance(
             "https://plantpal-f-default-rtdb.asia-southeast1.firebasedatabase.app/"
         ).getReference("sensorData")
 
-        // Fetch Firebase data
         fetchFirebaseData()
 
-        // Check location permission for weather
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED
         ) {
@@ -59,7 +55,6 @@ class HomepgActivity : AppCompatActivity() {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
-        // 🔹 When notification icon clicked → send data to NotificationsActivity
         val ivProfile = findViewById<ImageView>(R.id.ivnotif)
         ivProfile.setOnClickListener {
             if (latestSensorData != null) {
@@ -69,7 +64,6 @@ class HomepgActivity : AppCompatActivity() {
                 intent.putExtra("Humidity", latestHumidity)
                 intent.putExtra("Ambient_Temperature", latestTemp)
                 startActivity(intent)
-
             } else {
                 Toast.makeText(this, "Please wait, fetching sensor data...", Toast.LENGTH_SHORT).show()
             }
@@ -80,10 +74,9 @@ class HomepgActivity : AppCompatActivity() {
         speedometer1 = findViewById(R.id.gauge1)
         speedometer2 = findViewById(R.id.gauge2)
         speedometer3 = findViewById(R.id.gauge3)
-        speedometer4 = findViewById(R.id.gauge4)
+        speedometer3.setMaxRange(50f) // Temperature max 50°C for correct mapping
     }
 
-    // 🔹 Fetch real-time Firebase sensor data
     private fun fetchFirebaseData() {
         Log.d("FirebaseCheck", "Connecting to Firebase...")
         database.addValueEventListener(object : ValueEventListener {
@@ -94,13 +87,12 @@ class HomepgActivity : AppCompatActivity() {
                         latestSensorData = data
                         Log.d("FirebaseData", "Fetched: $data")
 
-                        // Update gauges
                         speedometer1.setSpeed(data.soilMoisture1)
                         speedometer2.setSpeed(data.soilMoisture2)
-                        speedometer3.setSpeed((data.soilTemperature / 50f) * 100f)
-                        speedometer4.setSpeed(data.uv)
+                        speedometer3.setSpeed(data.soilTemperature)
 
-                        // Update text
+                        latestUV = data.uv
+
                         findViewById<TextView>(R.id.tvMoist1).text = "Soil M1: ${data.soilMoisture1}"
                         findViewById<TextView>(R.id.tvMoist2).text = "Soil M2: ${data.soilMoisture2}"
                         findViewById<TextView>(R.id.tvSoilTemp).text = "Soil Temp: ${data.soilTemperature}°C"
@@ -117,14 +109,12 @@ class HomepgActivity : AppCompatActivity() {
         })
     }
 
-    // 🔹 Ask permission for location
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) fetchLocationAndWeather()
             else Toast.makeText(this, "Location permission required.", Toast.LENGTH_SHORT).show()
         }
 
-    // 🔹 Fetch device location
     private fun fetchLocationAndWeather() {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -143,7 +133,6 @@ class HomepgActivity : AppCompatActivity() {
         }
     }
 
-    // 🔹 Fetch weather data from OpenWeatherMap
     private fun fetchWeather(lat: Double, lon: Double) {
         val url =
             "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric"
@@ -168,7 +157,6 @@ class HomepgActivity : AppCompatActivity() {
                     val windSpeed = wind?.optDouble("speed", 0.0) ?: 0.0
                     val visibility = response.optInt("visibility", 0) / 1000
 
-                    // Update weather info on UI
                     findViewById<TextView>(R.id.city).text = cityName
                     findViewById<TextView>(R.id.temperature).text = "$temperature°C"
                     findViewById<TextView>(R.id.humidity).text = "$humidity%"
