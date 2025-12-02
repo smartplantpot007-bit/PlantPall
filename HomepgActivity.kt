@@ -11,6 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import android.animation.AnimatorInflater
+import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.android.volley.Request
@@ -39,6 +41,25 @@ class HomepgActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_homepg)
 
+        val ivMenu = findViewById<ImageView>(R.id.ivMenu)
+        val sideMenu = findViewById<LinearLayout>(R.id.sideMenu) 
+        val ivCloseMenu = findViewById<ImageView>(R.id.ivCloseMenu)
+
+        // --- HIDE MENU AT START ---
+        sideMenu.post {
+            sideMenu.translationX = sideMenu.width.toFloat()
+        }
+
+        // --- OPEN MENU ---
+        ivMenu.setOnClickListener {
+            sideMenu.animate().translationX(0f).setDuration(300).start()
+        }
+
+        // --- CLOSE MENU ---
+        ivCloseMenu.setOnClickListener {
+            sideMenu.animate().translationX(sideMenu.width.toFloat()).setDuration(300).start()
+        }
+
         setupGauges()
 
         database = FirebaseDatabase.getInstance(
@@ -55,18 +76,28 @@ class HomepgActivity : AppCompatActivity() {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
-        val ivProfile = findViewById<ImageView>(R.id.ivnotif)
+        // ---- NEW ICONS ----
+        val ivNotification = findViewById<ImageView>(R.id.ivNotification)
+        val ivProfile = findViewById<ImageView>(R.id.ivProfile)
+
+        // 🍔 MENU ICON ROTATION ANIMATION
+        val rotateAnim = AnimatorInflater.loadAnimator(this, R.animator.rotate_menu)
+        ivMenu.setOnClickListener {
+            rotateAnim.setTarget(ivMenu)
+            rotateAnim.start()
+            sideMenu.animate().translationX(0f).setDuration(300).start()
+        }
+
+        // 🔔 Notification Screen
+        ivNotification.setOnClickListener {
+            val intent = Intent(this, NotificationsActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 👤 Profile Screen
         ivProfile.setOnClickListener {
-            if (latestSensorData != null) {
-                val intent = Intent(this, NotificationsActivity::class.java)
-                intent.putExtra("Soil_Moisture", latestSensorData!!.soilMoisture1.toFloat())
-                intent.putExtra("Soil_Temperature", latestSensorData!!.soilTemperature.toFloat())
-                intent.putExtra("Humidity", latestHumidity)
-                intent.putExtra("Ambient_Temperature", latestTemp)
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "Please wait, fetching sensor data...", Toast.LENGTH_SHORT).show()
-            }
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -74,7 +105,7 @@ class HomepgActivity : AppCompatActivity() {
         speedometer1 = findViewById(R.id.gauge1)
         speedometer2 = findViewById(R.id.gauge2)
         speedometer3 = findViewById(R.id.gauge3)
-        speedometer3.setMaxRange(50f) // Temperature max 50°C for correct mapping
+        speedometer3.setMaxRange(50f)
     }
 
     private fun fetchFirebaseData() {
@@ -164,8 +195,7 @@ class HomepgActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.wind).text = "$windSpeed m/s"
                     findViewById<TextView>(R.id.visibility).text = "$visibility km"
 
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Error parsing weather data", Toast.LENGTH_SHORT).show()
+                } catch (_: Exception) {
                 }
             },
             { _ ->
