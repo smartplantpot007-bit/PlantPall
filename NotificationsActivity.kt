@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.google.firebase.database.*
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,10 +36,8 @@ class NotificationsActivity : AppCompatActivity() {
 
     private val apiUrl = "https://plant-predict-4u3k.onrender.com/predict"
 
-    private var soilMoisture = 0f
-    private var ambientTemp = 0f
-    private var soilTemp = 0f
-    private var humidity = 0f
+    // Firebase database reference
+    private lateinit var database: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,11 +49,10 @@ class NotificationsActivity : AppCompatActivity() {
         tvPredictionResult = findViewById(R.id.tvPredictionResult)
         btnClearPopups = findViewById(R.id.btnClearPopups)
 
-        // Get sensor data
-        soilMoisture = intent.getFloatExtra("Soil_Moisture", 0f)
-        ambientTemp = intent.getFloatExtra("Ambient_Temperature", 0f)
-        soilTemp = intent.getFloatExtra("Soil_Temperature", 0f)
-        humidity = intent.getFloatExtra("Humidity", 0f)
+        // Firebase reference
+        database = FirebaseDatabase.getInstance(
+            "https://plantpal-f-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        ).getReference("sensorData")
 
         // History setup
         historyList = NotificationStorage.getNotifications(this).toMutableList()
@@ -100,23 +99,23 @@ class NotificationsActivity : AppCompatActivity() {
         btnPredict.setOnClickListener {
             btnPredict.isEnabled = false
 
-            // Store original colors
             val originalTint = btnPredict.backgroundTintList
             val originalTextColor = btnPredict.currentTextColor
 
-            // Set pressed style (green)
-            btnPredict.backgroundTintList =
-                ColorStateList.valueOf(Color.parseColor("#388E3C"))
+            btnPredict.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#388E3C"))
             btnPredict.setTextColor(Color.WHITE)
             btnPredict.text = "Predicting..."
 
-            sendPredictionRequest {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    btnPredict.backgroundTintList = originalTint
-                    btnPredict.setTextColor(originalTextColor)
-                    btnPredict.text = "Predict Now"
-                    btnPredict.isEnabled = true
-                }, 600)
+            // Fetch latest sensor data from Firebase before prediction
+            fetchLatestSensorData { soilMoisture, ambientTemp, soilTemp, humidity ->
+                sendPredictionRequest(soilMoisture, ambientTemp, soilTemp, humidity) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        btnPredict.backgroundTintList = originalTint
+                        btnPredict.setTextColor(originalTextColor)
+                        btnPredict.text = "Predict Now"
+                        btnPredict.isEnabled = true
+                    }, 200)
+                }
             }
         }
 
@@ -130,7 +129,42 @@ class NotificationsActivity : AppCompatActivity() {
         btnClearPopups.visibility = View.VISIBLE
     }
 
-    private fun sendPredictionRequest(onComplete: () -> Unit) {
+    // Fetch latest sensor data from Firebase
+    private fun fetchLatestSensorData(onComplete: (Float, Float, Float, Float) -> Unit) {
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val data = snapshot.getValue(SensorData::class.java)
+                    if (data != null) {
+                        val soilMoisture1 = data.soilMoisture1 // or average of M1 & M2
+                        val soilMoisture2= data.soilMoisture2
+                        val soilTemp = data.soilTemperature
+                        val humidity = data.humidity
+                        onComplete(soilMoisture1, soilMoisture2, soilTemp, humidity)
+                    } else {
+                        Toast.makeText(this@NotificationsActivity, "Sensor data unavailable", Toast.LENGTH_SHORT).show()
+                        onComplete(0f, 0f, 0f, 0f)
+                    }
+                } else {
+                    Toast.makeText(this@NotificationsActivity, "No sensor data found", Toast.LENGTH_SHORT).show()
+                    onComplete(0f, 0f, 0f, 0f)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@NotificationsActivity, "Firebase error: ${error.message}", Toast.LENGTH_SHORT).show()
+                onComplete(0f, 0f, 0f, 0f)
+            }
+        })
+    }
+
+    private fun sendPredictionRequest(
+        soilMoisture: Float,
+        ambientTemp: Float,
+        soilTemp: Float,
+        humidity: Float,
+        onComplete: () -> Unit
+    ) {
         val data = JSONObject().apply {
             put("Soil_Moisture", soilMoisture)
             put("Ambient_Temperature", ambientTemp)
@@ -154,7 +188,6 @@ class NotificationsActivity : AppCompatActivity() {
 
                 val timestamp = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault()).format(Date())
 
-                // Show only one popup at a time
                 popupList.clear()
                 val popup = NotificationModel("Popup", message, timestamp)
                 popupList.add(0, popup)
@@ -162,7 +195,6 @@ class NotificationsActivity : AppCompatActivity() {
                 rvPopups.scrollToPosition(0)
                 btnClearPopups.visibility = View.VISIBLE
 
-                // Save to history
                 val newNotification = NotificationModel("Prediction Result 🌿", message, timestamp)
                 NotificationStorage.saveNotification(this, newNotification)
                 updateRecyclerView()
