@@ -7,7 +7,9 @@ import android.text.InputType
 import android.view.MotionEvent
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.auth.api.signin.*
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -21,6 +23,7 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var tvLogin: TextView
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
+
     private val RC_SIGN_IN = 1001
 
     private var isPasswordVisible = false
@@ -43,7 +46,7 @@ class SignUpActivity : AppCompatActivity() {
 
         ivBack.setOnClickListener { finish() }
 
-        // 👁 Toggle password visibility
+        // ---- PASSWORD TOGGLE ----
         etPassword.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
                 etPassword.compoundDrawables[2]?.let { drawable ->
@@ -68,7 +71,7 @@ class SignUpActivity : AppCompatActivity() {
             false
         }
 
-        // 🔹 Google Sign-In setup
+        // ---- GOOGLE SIGN-IN SETUP ----
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -77,10 +80,11 @@ class SignUpActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         googleSignInLayout.setOnClickListener {
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, RC_SIGN_IN)
+            val intent = googleSignInClient.signInIntent
+            startActivityForResult(intent, RC_SIGN_IN)
         }
 
+        // ---- EMAIL SIGNUP ----
         btnSignUp.setOnClickListener {
             validateInputs()
         }
@@ -109,6 +113,7 @@ class SignUpActivity : AppCompatActivity() {
         else isConfirmPasswordVisible = !isConfirmPasswordVisible
     }
 
+    // ---- EMAIL SIGNUP VALIDATION ----
     private fun validateInputs() {
         val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString().trim()
@@ -123,16 +128,21 @@ class SignUpActivity : AppCompatActivity() {
             !password.contains(Regex(".*\\d.*")) ->
                 etPassword.error = "Password must contain at least one number"
             !password.contains(Regex(".*[!@#\$%^&*(),.?\":{}|<>].*")) ->
-                etPassword.error = "Password must contain at least one special character"
+                etPassword.error = "Password must contain a special character"
             confirmPassword.isEmpty() -> etConfirmPassword.error = "Confirm Password cannot be empty"
             password != confirmPassword -> etConfirmPassword.error = "Passwords do not match"
+
             else -> {
                 auth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
+                    .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             Toast.makeText(this, "Sign-up successful!", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this, HomepgActivity::class.java))
+
+                            val intent = Intent(this, HomepgActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
                             finish()
+
                         } else {
                             Toast.makeText(this, "Sign-up failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                         }
@@ -141,6 +151,7 @@ class SignUpActivity : AppCompatActivity() {
         }
     }
 
+    // ---- RESULT FOR GOOGLE LOGIN ----
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -148,25 +159,31 @@ class SignUpActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                if (account != null) {
-                    firebaseAuthWithGoogle(account.idToken!!)
-                }
-            } catch (e: ApiException) {
-                Toast.makeText(this, "Google sign-in failed: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+                firebaseAuthWithGoogle(account!!.idToken!!)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Google Sign-in failed", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    // ---- FIREBASE GOOGLE AUTH ----
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
+
         auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
+            .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "Google Sign-In successful", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, HomepgActivity::class.java))
+
+                    Toast.makeText(this, "Google Sign-In Successful", Toast.LENGTH_SHORT).show()
+
+                    // FIX: Prevents going back to MainActivity
+                    val intent = Intent(this, HomepgActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
                     finish()
+
                 } else {
-                    Toast.makeText(this, "Authentication Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Auth Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
     }
