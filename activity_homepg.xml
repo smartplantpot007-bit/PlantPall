@@ -12,12 +12,6 @@
         android:background="@drawable/bgplanth"
         tools:context=".HomepgActivity">
 
-        <include
-            android:id="@+id/sideMenu"
-            layout="@layout/layout_side_menu"
-            android:visibility="visible"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
         <!-- 🔙 Back Button -->
         <ImageView
             android:id="@+id/ivBack"
