@@ -41,25 +41,6 @@ class HomepgActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_homepg)
 
-        val ivMenu = findViewById<ImageView>(R.id.ivMenu)
-        val sideMenu = findViewById<LinearLayout>(R.id.sideMenu) 
-        val ivCloseMenu = findViewById<ImageView>(R.id.ivCloseMenu)
-
-        // --- HIDE MENU AT START ---
-        sideMenu.post {
-            sideMenu.translationX = sideMenu.width.toFloat()
-        }
-
-        // --- OPEN MENU ---
-        ivMenu.setOnClickListener {
-            sideMenu.animate().translationX(0f).setDuration(300).start()
-        }
-
-        // --- CLOSE MENU ---
-        ivCloseMenu.setOnClickListener {
-            sideMenu.animate().translationX(sideMenu.width.toFloat()).setDuration(300).start()
-        }
-
         setupGauges()
 
         database = FirebaseDatabase.getInstance(
@@ -80,13 +61,6 @@ class HomepgActivity : AppCompatActivity() {
         val ivNotification = findViewById<ImageView>(R.id.ivNotification)
         val ivProfile = findViewById<ImageView>(R.id.ivProfile)
 
-        // 🍔 MENU ICON ROTATION ANIMATION
-        val rotateAnim = AnimatorInflater.loadAnimator(this, R.animator.rotate_menu)
-        ivMenu.setOnClickListener {
-            rotateAnim.setTarget(ivMenu)
-            rotateAnim.start()
-            sideMenu.animate().translationX(0f).setDuration(300).start()
-        }
 
         // 🔔 Notification Screen
         ivNotification.setOnClickListener {
